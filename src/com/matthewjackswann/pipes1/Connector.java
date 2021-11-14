@@ -1,5 +1,6 @@
 package com.matthewjackswann.pipes1;
 
+import com.matthewjackswann.util.BiMap;
 import com.matthewjackswann.util.Point2D;
 
 import java.util.ArrayList;
@@ -10,8 +11,7 @@ import java.util.Map;
 public class Connector extends Pipe {
 
     private final Map<PipeDirection, PipeState> connections = new HashMap<>();
-    private final Map<PipeDirection, PipeDirection> rotationMapIn = new HashMap<>();
-    private final Map<PipeDirection, PipeDirection> rotationMapOut = new HashMap<>();
+    private final BiMap<PipeDirection, PipeDirection> rotationMap = new BiMap<>();
     private int rotation = 0;
     private final int maxRotation;
 
@@ -25,8 +25,7 @@ public class Connector extends Pipe {
             }
         }
         for (PipeDirection d : PipeDirection.values()) {
-            rotationMapIn.put(d, d);
-            rotationMapOut.put(d, d);
+            rotationMap.put(d, d);
         }
     }
 
@@ -39,8 +38,7 @@ public class Connector extends Pipe {
         if (maxRotation == 0) throw new RuntimeException("Can't rotate locked pipe");
         this.rotation = ((this.rotation + 1) % maxRotation);
         for (PipeDirection d : PipeDirection.values()) {
-            rotationMapIn.put(d, rotationMapIn.get(d).left());
-            rotationMapOut.put(d, rotationMapOut.get(d).right());
+            rotationMap.put(d, rotationMap.get(d).left());
         }
     }
 
@@ -60,14 +58,14 @@ public class Connector extends Pipe {
     @Override
     boolean update(PipeDirection direction, PipeColour colour) {
         if (colour == PipeColour.INVALID || colour == PipeColour.CLEAR) return false;
-        PipeDirection rawDirection = rotationMapIn.get(direction);
+        PipeDirection rawDirection = rotationMap.get(direction);
         PipeState state = connections.getOrDefault(rawDirection, null);
         if (state == null) return false; // pipes into side with no connections
         if (state.getState() == colour) return true;
         state.updateState(colour);
         if (state.getState() == PipeColour.INVALID) return false;
         for (PipeDirection connectedPipe : state.getConnecting()) {
-            PipeDirection out = rotationMapOut.get(connectedPipe);
+            PipeDirection out = rotationMap.getKey(connectedPipe);
             if (out == null) throw new RuntimeException("Rotation map shouldn't return null");
             if (!adjacentPipes.get(out).update(out.opposite(), state.getState())) return false;
         }
@@ -96,7 +94,7 @@ public class Connector extends Pipe {
         List<PipeDirection> result = new ArrayList<>();
         for (PipeState state: connections.values()) {
             for (PipeDirection rawDirection: state.getConnecting()) {
-                PipeDirection rotatedDirection = rotationMapOut.get(rawDirection);
+                PipeDirection rotatedDirection = rotationMap.getKey(rawDirection);
                 if (!result.contains(rotatedDirection)) {
                     result.add(rotatedDirection);
                 }

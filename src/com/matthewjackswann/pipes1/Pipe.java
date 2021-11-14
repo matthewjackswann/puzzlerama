@@ -2,7 +2,6 @@ package com.matthewjackswann.pipes1;
 
 import com.matthewjackswann.util.Point2D;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,12 +16,6 @@ abstract public class Pipe {
 
     private final Point2D center;
     final Map<PipeDirection, Pipe> adjacentPipes = new HashMap<>();
-    private final static Map<Point2D, PipeDirection> directionMap= Map.of(
-            new Point2D(0, -1), PipeDirection.NORTH,
-            new Point2D(1, 0), PipeDirection.EAST,
-            new Point2D(0, 1), PipeDirection.SOUTH,
-            new Point2D(-1, 0), PipeDirection.WEST);
-
     public Pipe(Point2D center) {
         this.center = center;
         for (PipeDirection direction : PipeDirection.values()) {
@@ -48,24 +41,35 @@ abstract public class Pipe {
 
     void setRotation(int x) {}
 
-    List<Integer> getValidRotations(Point2D coord, List<Point2D> unFixed) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Pipe)) return false;
+
+        Pipe pipe = (Pipe) o;
+
+        return center.equals(pipe.center);
+    }
+
+    @Override
+    public int hashCode() {
+        return center.hashCode();
+    }
+
+    List<Integer> getValidRotations(List<Pipe> unFixed) {
         List<Integer> validRotations = new ArrayList<>();
         for (int rotation = 0; rotation < this.getMaxRotation(); rotation++) {
-            this.rotate();
             boolean rotationValid = true;
-            for (Point2D neighborDir : directionMap.keySet()) {
-                if (!unFixed.contains(coord.add(neighborDir))) { // if neighbor is fixed
-                    if (this.isConnectedIncorrectlyTo(directionMap.get(neighborDir))) rotationValid = false;
+            for (PipeDirection neighborDir : PipeDirection.values()) {
+                Pipe neighbor = this.adjacentPipes.get(neighborDir);
+                if (!unFixed.contains(neighbor)) { // if neighbor is fixed
+                    if (neighbor.getConnections().contains(neighborDir.opposite()) != getConnections().contains(neighborDir)) rotationValid = false;
                 }
             }
             if (rotationValid) validRotations.add(this.getRotation());
+            this.rotate();
         }
         return validRotations;
-    }
-
-    boolean isConnectedIncorrectlyTo(PipeDirection direction) {
-        Pipe pipe = adjacentPipes.get(direction);
-        return pipe.getConnections().contains(direction.opposite()) != getConnections().contains(direction);
     }
 
     static class PipeState {
@@ -114,7 +118,6 @@ abstract public class Pipe {
 
         @Override
         void reset() {}
-
 
         @Override
         List<PipeDirection> getConnections() {

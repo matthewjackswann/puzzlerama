@@ -17,14 +17,6 @@ public class Point2D {
         return y;
     }
 
-    public Point2D add(int x, int y) {
-        return new Point2D(this.x + x, this.y + y);
-    }
-
-    public Point2D add(Point2D point) {
-        return add(point.getX(), point.getY());
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -34,5 +26,12 @@ public class Point2D {
 
         if (x != point2D.x) return false;
         return y == point2D.y;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = x;
+        result = 31 * result + y;
+        return result;
     }
 }

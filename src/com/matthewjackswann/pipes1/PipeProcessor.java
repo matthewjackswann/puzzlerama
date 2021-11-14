@@ -5,12 +5,10 @@ import com.matthewjackswann.util.Point2D;
 import com.matthewjackswann.util.Tuple2;
 import com.matthewjackswann.util.Tuple3;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class PipeProcessor {
 
@@ -55,9 +53,6 @@ public class PipeProcessor {
         List<Tuple2<Integer, Integer>> xSquares = getSquares(splits.getFirst(), squareLength, squareLengthVar);
         List<Tuple2<Integer, Integer>> ySquares = getSquares(splits.getSecond(), squareLength, squareLengthVar);
         List<Tuple2<Tuple2<Integer, Integer>, Tuple2<Integer, Integer>>> squares = Tuple2.cartesianProduct(xSquares, ySquares);
-        try {
-            ImageIO.write(i, "png", new File("/home/swanny/Downloads/imageOut.png"));
-        } catch (Exception ignored) {}
         int squareNo = 0;
         List<Pipe> pipes = new ArrayList<>();
         for (var square : squares) {

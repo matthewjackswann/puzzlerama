@@ -1,25 +1,17 @@
 package com.matthewjackswann.pipes1;
 
-import com.matthewjackswann.util.Point2D;
-import com.matthewjackswann.util.Tuple2;
 import com.matthewjackswann.util.Tuple3;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 // representation of an entire level / puzzle
 public class PipeGrid {
     private final Pipe[][] grid; // n x n size
     private final int n;
     private final List<Source> sources = new ArrayList<>(); // list of taps / sources
-    private final static Map<Point2D, PipeDirection> directionMap= Map.of(
-            new Point2D(0, -1), PipeDirection.NORTH,
-            new Point2D(1, 0), PipeDirection.EAST,
-            new Point2D(0, 1), PipeDirection.SOUTH,
-            new Point2D(-1, 0), PipeDirection.WEST);
 
     public PipeGrid(int n, List<Pipe> pipes) {
         if (n < 1) throw new RuntimeException("n can't be smaller then 1");
@@ -61,97 +53,97 @@ public class PipeGrid {
         return true;
     }
 
-    private boolean solve(List<Point2D> unFixed,
-                          BlockingQueue<Tuple3<Boolean[], Point2D, Integer>> instructionQueue,
-                          Boolean[] valid) {
+    private boolean solve(List<Pipe> unFixed,
+                          BlockingQueue<Tuple3<AtomicBoolean, Pipe, Integer>> instructionQueue,
+                          AtomicBoolean valid) {
         if (unFixed.isEmpty()) return solved();
         boolean partFixed = true;
         while (partFixed) {
             partFixed = false;
-            List<Point2D> toFix = new ArrayList<>();
-            for (Point2D coord : unFixed) {
-                Connector pipe = (Connector) grid[coord.getX()][coord.getY()];
-                List<Integer> validRotations = new ArrayList<>();
-                for (int rotation = 0; rotation < pipe.getMaxRotation(); rotation++) {
-                    pipe.rotate();
-                    boolean rotationValid = true;
-                    for (Point2D neighborDir : directionMap.keySet()) {
-                        if (!unFixed.contains(coord.add(neighborDir))) { // if direction is fixed
-                            if (pipe.isConnectedIncorrectlyTo(directionMap.get(neighborDir))) rotationValid = false;
-                        }
-                    }
-                    if (rotationValid) validRotations.add(pipe.getRotation());
-                }
+            List<Pipe> toFix = new ArrayList<>();
+            for (Pipe pipe : unFixed) {
+                List<Integer> validRotations = pipe.getValidRotations(unFixed);
                 if (validRotations.size() == 1) {
                     pipe.setRotation(validRotations.get(0));
                     try {
-                        instructionQueue.put(new Tuple3<>(valid, coord, validRotations.get(0)));
+                        instructionQueue.put(new Tuple3<>(valid, pipe, validRotations.get(0)));
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         System.out.println("Couldn't add instruction to queue");
                     }
                     partFixed = true;
-                    toFix.add(coord);
+                    toFix.add(pipe);
                 }
             }
             unFixed.removeIf(toFix::contains);
-            toFix.clear();
         }
         if (unFixed.isEmpty()) return solved();
         // otherwise makes assumption
-        Point2D coord = unFixed.get(0);
-        unFixed.remove(coord);
-        Connector pipe = (Connector) grid[coord.getX()][coord.getY()];
-        for (int rotation = 0; rotation < pipe.getMaxRotation(); rotation++) {
-            boolean rotationValid = true;
-            for (Point2D neighborDir : directionMap.keySet()) {
-                if (!unFixed.contains(coord.add(neighborDir))) { // if direction is fixed
-                    if (pipe.isConnectedIncorrectlyTo(directionMap.get(neighborDir))) rotationValid = false;
+        Pipe newFixedPipe = unFixed.get(0);
+        unFixed.remove(newFixedPipe);
+        List<Integer> validRotations = newFixedPipe.getValidRotations(unFixed);
+        for (int rotation: validRotations) {
+            newFixedPipe.setRotation(rotation);
+            AtomicBoolean correct = new AtomicBoolean(true);
+            if (solve(new ArrayList<>(unFixed), instructionQueue, correct)) {
+                try {
+                    instructionQueue.put(new Tuple3<>(correct, newFixedPipe, rotation));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    System.out.println("Couldn't add instruction to queue");
                 }
+                return true;
+            } else {
+                correct.set(false);
             }
-            if (rotationValid) {
-                Boolean[] correct = {true};
-                if (solve(new ArrayList<>(unFixed), instructionQueue, correct)) {
-                    try {
-                        instructionQueue.put(new Tuple3<>(correct, coord, rotation));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        System.out.println("Couldn't add instruction to queue");
-                    }
-                    return true;
-                } else {
-                    correct[0] = false;
-                }
-            }
-            pipe.rotate();
         }
         return false;
     }
 
-    public Map<Point2D, Tuple2<Point2D, Integer>> getPipeInfo() {
-        Map<Point2D, Tuple2<Point2D, Integer>> results = new HashMap<>();
-        for (int y = 0; y < n; y++) {
-            for (int x = 0; x < n; x++) {
-                Pipe p = grid[x][y];
-                if (p.getRotation() != -1) {
-                    Connector connector = (Connector) p;
-                    results.put(new Point2D(x,y), new Tuple2<>(connector.getCenter(), connector.getMaxRotation()));
+    @SuppressWarnings("unused")
+    private boolean solve(List<Pipe> unFixed) {
+        if (unFixed.isEmpty()) return solved(); // used for recursive call, if everything is fixed return if it is solved
+        boolean partFixed = true;
+        while (partFixed) { // while at least one pipe was fixed the previous iteration
+            partFixed = false;
+            List<Pipe> toFix = new ArrayList<>();
+            for (Pipe pipe : unFixed) {
+                List<Integer> validRotations = pipe.getValidRotations(unFixed);
+                if (validRotations.size() == 1) { // if there is only one valid rotation
+                    pipe.setRotation(validRotations.get(0)); // set it's rotation to that
+                    partFixed = true;
+                    toFix.add(pipe); // fix the pipe
                 }
             }
+            unFixed.removeIf(toFix::contains); // remove the fixed pipes from the unfixed list
         }
-        return results;
+        if (unFixed.isEmpty()) return solved();
+        // otherwise makes assumption
+        Pipe newFixedPipe = unFixed.get(0); // selects the first unfixed pipe
+        unFixed.remove(newFixedPipe); // removes it from the unfixed list
+        List<Integer> validRotations = newFixedPipe.getValidRotations(unFixed);
+        for (int rotation: validRotations) {
+            newFixedPipe.setRotation(rotation); // presumes that this rotation is the correct one
+            if (solve(new ArrayList<>(unFixed))) { // if the grid can be solved then the presumption is correct
+                return true;
+            } // if the grid can't be solved the grid is incorrect and moves onto the next valid rotation
+        }
+        // if all valid rotations are invalid then a previous assumption must be wrong so false is returned
+        // this will move the assumption on to another one
+        return false;
     }
 
-    public boolean solve(BlockingQueue<Tuple3<Boolean[], Point2D, Integer>> instructions) {
-        List<Point2D> unFixed = new ArrayList<>();
+    public boolean solve(BlockingQueue<Tuple3<AtomicBoolean, Pipe, Integer>> instructions) {
+        List<Pipe> unFixed = new ArrayList<>();
         for (int y = 0; y < this.n; y++) {
             for (int x = 0; x < this.n; x++) {
-                if (grid[x][y].getRotation() != -1) {
-                    unFixed.add(new Point2D(x,y));
+                Pipe pipe = grid[x][y];
+                if (pipe.getMaxRotation() != -1) {
+                    unFixed.add(pipe);
                 }
             }
         }
-        return solve(unFixed, instructions, new Boolean[]{true});
+        return solve(unFixed, instructions, new AtomicBoolean(true));
     }
 
     private boolean simulate() {

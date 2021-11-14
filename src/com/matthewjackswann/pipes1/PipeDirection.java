@@ -22,14 +22,6 @@ public enum PipeDirection {
         return null;
     }
 
-    public PipeDirection right() {
-        if (this == NORTH) return EAST;
-        if (this == EAST) return SOUTH;
-        if (this == SOUTH) return WEST;
-        if (this == WEST) return NORTH;
-        return null;
-    }
-
     public static PipeDirection fromIndex(int i) {
         if (i == 0) return NORTH;
         if (i == 1) return EAST;

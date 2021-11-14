@@ -4,6 +4,4 @@ targetRange=3
 pipeOtherColour=-12298909
 pipeTargetRange=2
 pipeRotationDelay=400
-nextLevelButtonColour=5592405
 pipeLevelDelay=1000
-maxPipeLevel=249
