@@ -1,7 +1,7 @@
-package com.matthewjackswann.pipes1;
+package com.swannyscode.pipes1;
 
-import com.matthewjackswann.util.BiMap;
-import com.matthewjackswann.util.Point2D;
+import com.swannyscode.util.BiMap;
+import com.swannyscode.util.Point2D;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,6 +1,6 @@
-package com.matthewjackswann.pipes1;
+package com.swannyscode.pipes1;
 
-import com.matthewjackswann.util.Tuple3;
+import com.swannyscode.util.Tuple3;
 
 import java.util.ArrayList;
 import java.util.List;

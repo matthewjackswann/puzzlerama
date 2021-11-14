@@ -1,4 +1,4 @@
-package com.matthewjackswann;
+package com.swannyscode;
 
 import javax.swing.*;
 import java.awt.*;

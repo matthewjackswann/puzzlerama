@@ -1,6 +1,6 @@
-package com.matthewjackswann;
+package com.swannyscode;
 
-import com.matthewjackswann.pipes1.PipeGame;
+import com.swannyscode.pipes1.PipeGame;
 
 import java.util.concurrent.TimeUnit;
 

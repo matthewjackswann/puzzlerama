@@ -1,4 +1,4 @@
-package com.matthewjackswann.util;
+package com.swannyscode.util;
 
 public class Tuple3<Q, R, S> {
     private final Q first;

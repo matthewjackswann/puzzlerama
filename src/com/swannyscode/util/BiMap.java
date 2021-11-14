@@ -1,4 +1,4 @@
-package com.matthewjackswann.util;
+package com.swannyscode.util;
 
 import java.util.*;
 

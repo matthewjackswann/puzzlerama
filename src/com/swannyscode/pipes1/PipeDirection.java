@@ -1,4 +1,4 @@
-package com.matthewjackswann.pipes1;
+package com.swannyscode.pipes1;
 
 public enum PipeDirection {
     NORTH,

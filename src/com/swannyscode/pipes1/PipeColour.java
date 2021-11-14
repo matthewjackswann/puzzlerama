@@ -1,7 +1,7 @@
-package com.matthewjackswann.pipes1;
+package com.swannyscode.pipes1;
 
-import com.matthewjackswann.util.BiMap;
-import com.matthewjackswann.util.Tuple3;
+import com.swannyscode.util.BiMap;
+import com.swannyscode.util.Tuple3;
 
 import java.util.Collections;
 import java.util.Comparator;

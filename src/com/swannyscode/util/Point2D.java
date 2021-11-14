@@ -1,4 +1,4 @@
-package com.matthewjackswann.util;
+package com.swannyscode.util;
 
 public class Point2D {
     private final int x;
