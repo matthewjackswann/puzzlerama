@@ -25,8 +25,4 @@ public class BiMap<K, V> {
     public Collection<V> getValues() {
         return map.values();
     }
-
-    public Set<K> getKeys() {
-        return map.keySet();
-    }
 }
